@@ -1,23 +1,8 @@
 package ru.yandex.practicum.sleeptracker;
+
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-enum Chronotype {
-    OWL("Сова"),
-    LARK("Жаворонок"),
-    PIGEON("Голубь");
-
-    private final String description;
-
-    Chronotype(String description) {
-        this.description = description;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-}
 
 public class ChronotypeFunction implements SleepAnalysisFunction<String> {
     @Override
