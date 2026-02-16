@@ -47,21 +47,39 @@ public class SleepingSession {
     }
 
     public boolean isNightSession() {
+        // Сессия считается ночной, если она длится больше 3 часов и
+        // пересекается с ночным временем (22:00 - 08:00)
+        long duration = getDurationMinutes();
         int startHour = startTime.getHour();
-        int endHour = endTime.getHour();
 
-        // Сессия считается ночной, если она пересекает период с 0 до 6 утра
-        return (startHour <= 6 && endHour >= 0) ||  // началась до 6 утра
-                (startHour >= 0 && startHour < 6) || // началась ночью
-                (startTime.toLocalDate().isBefore(endTime.toLocalDate())); // переходит через полночь
+        return duration > 180 && (startHour >= 22 || startHour <= 8);
     }
 
     public boolean coversNightHours() {
+        // Проверяем, пересекается ли сессия с интервалом 00:00 - 06:00
         LocalDateTime nightStart = startTime.withHour(0).withMinute(0);
         LocalDateTime nightEnd = startTime.withHour(6).withMinute(0);
 
-        // Проверяем пересечение с интервалом 0:00 - 6:00
-        return !(endTime.isBefore(nightStart) || startTime.isAfter(nightEnd));
+        // Если сессия переходит через полночь
+        if (startTime.toLocalDate().isBefore(endTime.toLocalDate())) {
+            return true;
+        }
+
+        // Проверяем попадание в ночной интервал
+        int startHour = startTime.getHour();
+        int endHour = endTime.getHour();
+
+        // Сессия началась ночью и закончилась ночью/утром
+        if (startHour >= 0 && startHour < 6) {
+            return true;
+        }
+
+        // Сессия началась вечером и закончилась после полуночи
+        if (startHour >= 22 && endHour < 6) {
+            return true;
+        }
+
+        return false;
     }
 
     @Override

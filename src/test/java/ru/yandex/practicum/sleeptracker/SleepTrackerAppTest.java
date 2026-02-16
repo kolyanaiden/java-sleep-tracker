@@ -255,6 +255,9 @@ public class SleepTrackerAppTest {
 
         SleepingSession earlyMorning = SleepingSession.fromString("01.10.25 04:00;01.10.25 08:00;GOOD");
         assertTrue(earlyMorning.coversNightHours());
+
+        SleepingSession eveningSession = SleepingSession.fromString("01.10.25 22:00;02.10.25 02:00;GOOD");
+        assertTrue(eveningSession.coversNightHours());
     }
 
     @Test
@@ -263,9 +266,12 @@ public class SleepTrackerAppTest {
         assertTrue(overnight.isNightSession());
 
         SleepingSession daySession = SleepingSession.fromString("01.10.25 14:00;01.10.25 15:00;NORMAL");
-        assertTrue(daySession.isNightSession()); // Дневная сессия не считается ночной
+        assertFalse(daySession.isNightSession());
 
         SleepingSession earlyMorning = SleepingSession.fromString("01.10.25 04:00;01.10.25 08:00;GOOD");
         assertTrue(earlyMorning.isNightSession());
+
+        SleepingSession shortNight = SleepingSession.fromString("01.10.25 02:00;01.10.25 04:00;GOOD");
+        assertFalse(shortNight.isNightSession()); // Меньше 3 часов
     }
 }

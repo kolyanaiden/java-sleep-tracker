@@ -3,6 +3,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class SleeplessNightsFunction implements SleepAnalysisFunction<Long> {
     @Override
@@ -26,34 +27,30 @@ public class SleeplessNightsFunction implements SleepAnalysisFunction<Long> {
         LocalDate startDate = firstSession.toLocalDate();
         LocalDate endDate = lastSession.toLocalDate();
 
-        // Если первая сессия началась после 12 дня, начинаем со следующей ночи
+        // Если первая сессия началась после 12 дня, первая ночь для проверки - следующая
         if (firstSession.getHour() >= 12) {
             startDate = startDate.plusDays(1);
         }
 
-        // Если последняя сессия закончилась до 6 утра, это последняя ночь
-        if (lastSession.getHour() < 6) {
-            endDate = endDate.minusDays(1);
-        }
-
         long totalNights = Period.between(startDate, endDate).getDays() + 1;
 
-        // Находим ночи со сном
-        long nightsWithSleep = sessions.stream()
-                .filter(SleepingSession::coversNightHours)
-                .map(session -> {
-                    LocalDateTime sessionTime = session.getStartTime();
+        // Находим все даты, где был ночной сон
+        List<LocalDate> nightsWithSleep = sessions.stream()
+                .filter(s -> s.coversNightHours())
+                .map(s -> {
+                    LocalDateTime sessionTime = s.getStartTime();
                     // Если сессия началась после 12 дня, она относится к следующей ночи
                     if (sessionTime.getHour() >= 12) {
-                        sessionTime = sessionTime.plusDays(1);
+                        return sessionTime.plusDays(1).toLocalDate();
                     }
                     return sessionTime.toLocalDate();
                 })
                 .distinct()
-                .count();
+                .collect(Collectors.toList());
 
-        long sleeplessNights = Math.max(0, totalNights - nightsWithSleep);
+        long nightsWithSleepCount = nightsWithSleep.size();
+        long sleeplessNights = totalNights - nightsWithSleepCount;
 
-        return new SleepAnalysisResult<>("Количество бессонных ночей", sleeplessNights);
+        return new SleepAnalysisResult<>("Количество бессонных ночей", Math.max(0, sleeplessNights));
     }
 }
