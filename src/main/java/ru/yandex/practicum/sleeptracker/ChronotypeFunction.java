@@ -6,22 +6,6 @@ import java.util.stream.Collectors;
 
 public class ChronotypeFunction implements SleepAnalysisFunction<String> {
 
-    private enum Chronotype {
-        OWL("Сова"),
-        LARK("Жаворонок"),
-        PIGEON("Голубь");
-
-        private final String description;
-
-        Chronotype(String description) {
-            this.description = description;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-    }
-
     @Override
     public SleepAnalysisResult<String> apply(List<SleepingSession> sessions) {
         // Фильтруем только ночные сессии (длительные и в ночное время)
@@ -51,13 +35,11 @@ public class ChronotypeFunction implements SleepAnalysisFunction<String> {
         // Сова: ложится после 23:00, встает после 8:00
         if (startHour >= 23 && endHour >= 8) {
             return Chronotype.OWL;
-        }
-        // Жаворонок: ложится до 22:00, встает до 7:00
-        else if (startHour <= 22 && endHour <= 7) {
+            // Жаворонок: ложится до 22:00, встает до 7:00
+        } else if (startHour <= 22 && endHour <= 7) {
             return Chronotype.LARK;
-        }
-        // Все остальные случаи - голуби
-        else {
+            // Все остальные случаи - голуби
+        } else {
             return Chronotype.PIGEON;
         }
     }
