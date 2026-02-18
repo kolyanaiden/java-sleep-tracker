@@ -1,79 +1,80 @@
 package ru.yandex.practicum.sleeptracker;
 
+import ru.yandex.practicum.sleeptracker.analysis.*;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class SleepTrackerApp {
-    private final List<SleepAnalysisFunction<?>> analysisFunctions = new ArrayList<>();
+    private final List<SleepAnalysisFunction<?>> analysisFunctions;
 
     public SleepTrackerApp() {
-        // Регистрируем все функции анализа
-        registerAnalysisFunctions();
+        this.analysisFunctions = new ArrayList<>();
+        initializeFunctions();
     }
 
-    private void registerAnalysisFunctions() {
-        analysisFunctions.add(new ru.yandex.practicum.sleeptracker.TotalSessionsFunction());
-        analysisFunctions.add(new ru.yandex.practicum.sleeptracker.MinDurationFunction());
-        analysisFunctions.add(new ru.yandex.practicum.sleeptracker.MaxDurationFunction());
-        analysisFunctions.add(new ru.yandex.practicum.sleeptracker.AverageDurationFunction());
-        analysisFunctions.add(new ru.yandex.practicum.sleeptracker.BadQualitySessionsFunction());
-        analysisFunctions.add(new ru.yandex.practicum.sleeptracker.SleeplessNightsFunction());
-        analysisFunctions.add(new ru.yandex.practicum.sleeptracker.ChronotypeFunction());
+    private void initializeFunctions() {
+        // Добавляем все аналитические функции
+        analysisFunctions.add(new TotalSessionsFunction());
+        analysisFunctions.add(new MinDurationFunction());
+        analysisFunctions.add(new MaxDurationFunction());
+        analysisFunctions.add(new AvgDurationFunction());
+        analysisFunctions.add(new BadQualitySessionsFunction());
+        analysisFunctions.add(new SleeplessNightsFunction());
+        analysisFunctions.add(new ChronotypeFunction());
     }
 
     public List<SleepingSession> loadSessionsFromFile(String filePath) throws IOException {
-        return Files.lines(Paths.get(filePath))
+        Path path = Paths.get(filePath);
+
+        return Files.lines(path)
                 .filter(line -> !line.trim().isEmpty())
-                .map(SleepingSession::fromString)
-                .toList();
+                .map(SleepingSession::parseFromString)
+                .collect(Collectors.toList());
     }
 
     public List<SleepAnalysisResult<?>> analyzeSessions(List<SleepingSession> sessions) {
-        List<SleepAnalysisResult<?>> results = new ArrayList<>();
-        for (SleepAnalysisFunction<?> function : analysisFunctions) {
-            results.add(applyFunction(function, sessions));
-        }
-        return results;
-    }
-
-    private <T> SleepAnalysisResult<T> applyFunction(SleepAnalysisFunction<T> function, List<SleepingSession> sessions) {
-        return function.apply(sessions);
+        return analysisFunctions.stream()
+                .map(function -> function.apply(sessions))
+                .collect(Collectors.toList());
     }
 
     public static void main(String[] args) {
         try {
-            SleepTrackerApp app = new SleepTrackerApp();
-            List<SleepingSession> sessions;
-
-            if (args.length < 1) {
-                // Относительный путь от корня проекта
-                String defaultPath = "src/main/resources/sleep_log.txt";
-                System.out.println("Используется путь по умолчанию: " + defaultPath);
-                sessions = app.loadSessionsFromFile(defaultPath);
+            // Определяем путь к файлу
+            String filePath;
+            if (args.length > 0) {
+                filePath = args[0];
             } else {
-                sessions = app.loadSessionsFromFile(args[0]);
+                // Путь по умолчанию для файла в resources
+                filePath = "src/main/resources/sleep_log.txt";
             }
 
-            System.out.println("Анализ сна пользователя");
-            System.out.println("=======================");
-            System.out.println("Загружено сессий: " + sessions.size());
+            SleepTrackerApp app = new SleepTrackerApp();
+
+            System.out.println("Загрузка данных о сне из файла: " + filePath);
+            List<SleepingSession> sessions = app.loadSessionsFromFile(filePath);
+
+            System.out.println("Загружено сессий сна: " + sessions.size() + "\n");
+
+            System.out.println("Детальная информация по сессиям:");
+            sessions.forEach(session -> System.out.println("  " + session));
             System.out.println();
 
-            List<SleepAnalysisResult<?>> results = app.analyzeSessions(sessions);
+            System.out.println("РЕЗУЛЬТАТЫ АНАЛИЗА СНА:");
+            System.out.println("========================");
 
-            // Вывод результатов в main
-            results.stream()
-                    .map(SleepAnalysisResult::toString)
-                    .forEach(System.out::println);
+            List<SleepAnalysisResult<?>> results = app.analyzeSessions(sessions);
+            results.forEach(System.out::println);
 
         } catch (IOException e) {
             System.err.println("Ошибка при чтении файла: " + e.getMessage());
-            System.err.println("Проверьте, существует ли файл по пути: src/main/resources/sleep_log.txt");
-            System.err.println("Текущая директория: " + System.getProperty("user.dir"));
+            e.printStackTrace();
         } catch (Exception e) {
             System.err.println("Ошибка при анализе данных: " + e.getMessage());
             e.printStackTrace();
