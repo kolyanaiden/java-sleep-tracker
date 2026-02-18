@@ -30,13 +30,9 @@ public class SleeplessNightsFunction implements SleepAnalysisFunction<Long> {
                     // Если заснул после 12 дня, это сон для следующей ночи
                     if (start.getHour() >= 12) {
                         return start.toLocalDate().plusDays(1);
-                    }
-                    // Если заснул до 6 утра, это сон для предыдущей ночи
-                    else if (start.getHour() < 6) {
+                    } else if (start.getHour() < 6) {
                         return start.toLocalDate();
-                    }
-                    // Иначе это сон для текущей ночи
-                    else {
+                    } else {
                         return start.toLocalDate();
                     }
                 })
