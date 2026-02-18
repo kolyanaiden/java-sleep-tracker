@@ -2,7 +2,6 @@ package ru.yandex.practicum.sleeptracker;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 
 public class SleepingSession {
     private final LocalDateTime startTime;
